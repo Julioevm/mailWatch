@@ -14,7 +14,7 @@ MAILS = []
 RUN = True
 
 colors = {
-
+       
     'blue': '\33[34m',
     'white': '\033[0m'
 }

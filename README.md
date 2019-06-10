@@ -11,7 +11,8 @@ A config file named **config.ini** is necessary for this program to work with th
 [DEFAULT]
 USER = your email address
 PASSWORD = your password
-REFRESH = 300 < amount of time in seconds to refresh```
+REFRESH = 300 < amount of time in seconds to refresh
+```
 
 For now the config must be on the same folder as the script.
 
