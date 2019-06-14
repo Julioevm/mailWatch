@@ -9,25 +9,21 @@ PASSWORD = ''
 REFRESH = 300
 CREDENTIALS = ()
 ACCOUNT = ()
-INBOX = ()
-MAILS = []
-RUN = True
-
-colors = {
+TIME_FORMAT = '%d/%m/%Y %H:%M'
+COLORS = {
        
     'blue': '\33[34m',
     'white': '\033[0m'
 }
-TIME_FORMAT = '%d/%m/%Y %H:%M'
 
 
 def colorize(string, color):
-    if not color in colors:
+    if not color in COLORS:
         return string
-    return colors[color] + string + '\033[0m'
+    return COLORS[color] + string + '\033[0m'
 
 
-def loadConfig():
+def load_config():
 
     global USER
     global PASSWORD
@@ -44,7 +40,7 @@ def loadConfig():
         REFRESH = refresh
 
 
-def setAccount(USER, PASSWORD):
+def set_account(USER, PASSWORD):
 
     global CREDENTIALS
     global ACCOUNT
@@ -61,9 +57,9 @@ def setAccount(USER, PASSWORD):
         access_type=DELEGATE
     )
 
-def get_mail(inbox, num):
+def get_mail(inbox, n, m):
 
-    return list(inbox.all().order_by('-datetime_received')[:num])
+    return list(inbox.all().order_by('-datetime_received')[n:m])
 
 
 def show_mail_list(mails):
@@ -79,59 +75,63 @@ def show_mail_list(mails):
         print(colorize(line, color))
         i += 1
 
-def show_mail(n):
-    global MAILS
-    mail = list(MAILS)[n]
-    print(mail.subject)
-    print(mail.datetime_received.strftime(TIME_FORMAT))
-    print(mail.sender.name)
-    # cleantext = BeautifulSoup(mail.body, "lxml").get_text()
-    print(html2text.html2text(mail.body))
+def show_mail(mails, n):
+    
+    mail_list = list(mails)[n]
+    print(mail_list.subject)
+    print(mail_list.datetime_received.strftime(TIME_FORMAT))
+    print(mail_list.sender.name)
+    print(html2text.html2text(mail_list.body))
     input("Press Enter to continue...")
-
-def read_key():
-    global RUN
-    global INBOX
-    global MAILS
-    key = getkey()
-
-    if key == 'r' or key == 'R':
-        print("Refreshing list.")
-        MAILS = get_mail(INBOX, 10)
-    elif key == 'q' or key == 'Q':
-        print("Closing program. Good Bye!")
-        RUN = False
-    else:
-        # Check for integer to select a mail
-        try:
-            key = int(key)
-            if key >= 0 and key <= 9:
-                print("Selecting item ", key)
-                show_mail(key)
-        except:
-           print("Please enter a valid key.")
-
 
 def main():
 
-    global RUN
-    global MAILS
-    global INBOX
+    load_config()
+    set_account(USER, PASSWORD)
+    inbox = ACCOUNT.root / 'Top of Information Store' / 'Inbox'
+    mails = get_mail(inbox, 0, 10)
+    page = 0
+    max_page = inbox.total_count / 10
+    unread = inbox.unread_count
 
-    loadConfig()
-    setAccount(USER, PASSWORD)
-    INBOX = ACCOUNT.root / 'Top of Information Store' / 'Inbox'
-    MAILS = get_mail(INBOX, 10)
+    if unread > 0:
+        print('Unread email:' + str(unread))
 
-    while RUN:
-        print('Unread email:' + str(INBOX.unread_count))
+    while True:
 
-        print('Last 10 emails received:')
+        print('Showing page %d of %d' % (page, max_page))
 
-        show_mail_list(MAILS)
+        show_mail_list(mails)
 
-        print("Enter the number of item to open, R to refresh list.")
-        read_key()
+        print("Enter the number of item to open, R to refresh list. N and P to load next or previous page.")
+        key = getkey()
+
+        if key == 'r' or key == 'R':
+            print("Refreshing list.")
+            page = 0
+            mails = get_mail(inbox, 0, 10)
+        elif key == 'q' or key == 'Q':
+            print("Closing program. Good Bye!")
+            return False
+        elif key == 'n' or key == 'N':
+            if page < max_page:
+                print('Loading next page of emails.')
+                page += 1
+                mails = get_mail(inbox, page * 10, page * 10 + 10)
+        elif key == 'p' or key == 'P':
+            if page > 0:
+                print('Loading next previous of emails.')
+                page -= 1
+                mails = get_mail(inbox, page * 10, page * 10 + 10)
+        else:
+            # Check for integer to select a mail
+            try:
+                key = int(key)
+                if key >= 0 and key <= 9:
+                    print("Opening email ", key)
+                    show_mail(mails, key)
+            except:
+                print("Please enter a valid key.")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,8 @@ For now the config must be on the same folder as the script.
 
 Future features include:
 
-* Daemon mode: simply run on the background and notify of new email
+* Auto refresh based on user timer value
 * Open email items to read them :heavy_check_mark:
-* Multiple pages of mail
-* Better UI
+* Multiple pages of mail :heavy_check_mark:
+* Email body paging
+* Open email in editor
